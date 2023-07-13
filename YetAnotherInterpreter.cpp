@@ -68,12 +68,12 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    /*
     for (Token t : inputTokens) {
         std::cout << t << std::endl;
     }
-    */
 
+
+    /*
     // Fase di Parsing
 
     // Creo il manager per i nodi
@@ -103,6 +103,8 @@ int main(int argc, char* argv[])
     }
  
     return EXIT_SUCCESS;
+    */
+    
 }
 
 
