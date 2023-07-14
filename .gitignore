@@ -4,3 +4,4 @@ espressione.txt
 *.out
 *.gch
 LispInterpreter_TestFiles
+LispInterpreter_TestScripts

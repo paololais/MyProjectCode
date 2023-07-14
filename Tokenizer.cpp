@@ -60,9 +60,8 @@ void Tokenizer::tokenizeInputFile(std::ifstream& inputFile,
 		} else if (ch == ')') {
 			inputTokens.push_back(Token{ Token::RP, Token::id2word[Token::RP] });
 		} 
-		// numero intero 
-		else if (std::isdigit(ch)) {
-			// Costante intera
+		// numero intero, può essere preceduto da segno "-"
+		else if (ch == '-' || std::isdigit(ch)) {
 			std::stringstream tmp{};
 			tmp << ch;
 			do {
