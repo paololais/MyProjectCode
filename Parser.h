@@ -4,45 +4,54 @@
 #include <string>
 #include <vector>
 
-#include "Exceptions.h"
 #include "Token.h"
-#include "Expression.h"
-#include "ExpressionManager.h"
+#include "NodeManager.h"
+#include "Tokenizer.h"
+#include "NumExpr.h"
+#include "StmtBlock.h"
+#include "BoolExpr.h"
+#include "Exceptions.h"
+#include "Block.h"
+#include "Program.h"
+#include "Statement.h"
+#include "Node.h"
 
 // Function object per il parsing di espressioni
-// Funzione di parsing: restituisce "true" se l'espressione è corretta
+// Funzione di parsing: restituisce "true" se l'espressione ï¿½ corretta
 // "false" altrimenti. Suppone che nella stringa vi siano solo simboli
 // terminali per la grammatica definita sopra.
-class ParseExpression {
+class ParseProgram {
 
 public:
-    ParseExpression(ExpressionManager& manager) : em{ manager } { }
+    ParseProgram(NodeManager& manager) : nm{ manager } { }
 
-    Expression* operator()(const std::vector<Token>& tokenStream) {
-        // Utilizzo auto per evitare di scrivere per esteso il tipo dell'iteratore
-        auto tokenItr = tokenStream.begin();
-        streamEnd = tokenStream.end();
-        Expression* expr = recursiveParse(tokenItr);
-        // TODO: controllare se sono arrivato in fondo al token stream
-        return expr;
-    }
+    Program* operator()(const std::vector<Token>& tokenStream);
+
+    void printSyntaxTree(Node* node, int depth);
 
 private:
     std::vector<Token>::const_iterator streamEnd;
 
     // Riferimento all'expression manager "di sistema"
-    ExpressionManager& em;
+    NodeManager& nm;
 
-    // Parser a discesa ricorsiva nella struttura dell'espressione
-    Expression* recursiveParse(std::vector<Token>::const_iterator& tokenItr);
-
+    // Parser del programma
+    Program* parseProgram(std::vector<Token>::const_iterator& tokenItr);
     // Avanzamento "sicuro" di un iteratore
-    void safe_next(std::vector<Token>::const_iterator& itr) {
-        if (itr == streamEnd) {
-            throw ParseError("Unexpected end of input");
-        }
-        ++itr;
-    }
+    void safe_next(std::vector<Token>::const_iterator& itr);
+
+    StmtBlock* parseStmtBlock(std::vector<Token>::const_iterator& tokenItr);
+    Block* parseBlock(std::vector<Token>::const_iterator& tokenItr);
+    Statement* parseStatement(std::vector<Token>::const_iterator& tokenItr);
+    SetStmt* parseSetStatement(std::vector<Token>::const_iterator& tokenItr);
+    PrintStmt* parsePrintStatement(std::vector<Token>::const_iterator& tokenItr);
+    InputStmt* parseInputStatement(std::vector<Token>::const_iterator& tokenItr);
+    IfStmt* parseIfStatement(std::vector<Token>::const_iterator& tokenItr);
+    WhileStmt* parseWhileStatement(std::vector<Token>::const_iterator& tokenItr);
+
+    Variable* parseVariable(std::vector<Token>::const_iterator& itr);
+    NumExpr* parseNumExpr(std::vector<Token>::const_iterator& itr);
+    BoolExpr* parseBoolExpr(std::vector<Token>::const_iterator& itr);
 };
 
 #endif

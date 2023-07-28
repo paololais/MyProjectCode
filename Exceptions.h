@@ -14,5 +14,9 @@ struct ParseError : std::runtime_error {
 	ParseError(std::string msg) : std::runtime_error(msg.c_str()) { }
 };
 
+struct EvalError : std::runtime_error {
+	EvalError(const char* msg) : std::runtime_error(msg) { }
+	EvalError(std::string msg) : std::runtime_error(msg.c_str()) { }
+};
 
 #endif

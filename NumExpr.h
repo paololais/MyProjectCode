@@ -1,22 +1,27 @@
-#ifndef EXPRESSION_H
-#define EXPRESSION_H
+#ifndef NUMEXPR_H
+#define NUMEXPR_H
+
+#include <string>
+
+#include "Node.h"
 
 // Dichiarazione "forward" della classe Visitor
-// La classe è implementata in un altro modulo
+// La classe Ã¨ implementata in un altro modulo
 class Visitor;
 
-// Classe base astratta Expression (Composite + Interpreter)
+// Classe base astratta NumExpr (Composite + Interpreter)
 // Supponiamo di voler valutare espressioni aritmetiche intere
-class Expression {
+class NumExpr : public Node{
 public:
-    virtual ~Expression() {};
+    virtual ~NumExpr() {};
+
     virtual void accept(Visitor* v) = 0;
 };
 
 // Classe derivata per espressioni numeriche contenenti un numero
 // Si tratta di un oggetto immutabile: assegno un valore al campo
 // value all'atto della costruzione e poi posso solo accedere al valore
-class Number : public Expression {
+class Number : public NumExpr {
 public:
     Number(int v) : value{ v } { }
     ~Number() = default;
@@ -36,15 +41,15 @@ private:
 
 // Classe derivata per espressioni numeriche contenenti un operatore
 // Anche questi sono oggetti immutabili
-class Operator : public Expression {
+class Operator : public NumExpr {
 public:
-    enum OpCode { PLUS, MINUS, TIMES, DIV };
+    enum OpCode { ADD, SUB, MUL, DIV };
 
-    Operator(OpCode o, Expression* lop, Expression* rop) :
+    Operator(OpCode o, NumExpr* lop, NumExpr* rop) :
         op{ o }, left{ lop }, right{ rop } { }
     // Il distruttore di default implica che la deallocazione
-    // degli operandi è responsabilità di qualcun altro
-    // Questo è coerente con il costruttore che chiede nodi già allocati
+    // degli operandi ï¿½ responsabilitï¿½ di qualcun altro
+    // Questo ï¿½ coerente con il costruttore che chiede nodi giï¿½ allocati
     ~Operator() = default;
 
     // La copia e l'assegnamento sono "superficiali": la struttura
@@ -56,40 +61,51 @@ public:
     OpCode getOp() const {
         return op;
     }
-    Expression* getLeft() const {
+    NumExpr* getLeft() const {
         return left;
     }
-    Expression* getRight() const {
+    NumExpr* getRight() const {
         return right;
     }
 
     void accept(Visitor* v) override;
 
-    // Metodo di utilità per convertire caratteri in OpCode
-    // Metodo "a livello di classe": non opera su un particolare oggetto
-    static OpCode charToOpCode(char ch) {
-        switch (ch) {
-        case '+': return PLUS;
-        case '-': return MINUS;
-        case '*': return TIMES;
-        case '/': return DIV;
-        }
-    }
-    static char opCodeTochar(OpCode op) {
-        switch (op) {
-        case PLUS: return '+';
-        case MINUS: return '-';
-        case TIMES: return '*';
-        case DIV: return '/';
-        }
-    }
-
 private:
     OpCode      op;
-    Expression* left;
-    Expression* right;
+    NumExpr* left;
+    NumExpr* right;
 
 };
 
+// Classe derivata per variabili
+class Variable : public NumExpr {
+public:
+    Variable(std::string var, int val) : variable_id{ var }, value{ val } { }
+    Variable(std::string var) : variable_id{ var } { }
+    ~Variable() = default;
+
+    Variable(const Variable& other) = default;
+    Variable& operator=(const Variable& other) = default;
+
+    std::string get_variable_id() const {
+        return variable_id;
+    }
+    int get_value() const {
+        return value;
+    }
+
+    void set_variable_id(std::string id){
+        variable_id = id;
+    }
+    void set_value(int v){
+        value = v;
+    }
+
+    void accept(Visitor* v) override;
+
+private:
+    std::string variable_id;
+    int value;
+};
 
 #endif

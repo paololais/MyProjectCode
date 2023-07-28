@@ -2,15 +2,16 @@
 #include <string>
 #include <stdlib.h>
 #include <fstream>
+#include <memory>
 
 #include "Exceptions.h"
 #include "Token.h"
 #include "Tokenizer.h"
-#include "Expression.h"
-#include "ExpressionManager.h"
+#include "NodeManager.h"
 #include "Parser.h"
 #include "Visitor.h"
-
+#include "EvaluationVisitor.h"
+#include "PrintVisitor.h"
 
 // Facciamo in modo che l'espressione sia letta da file
 // Introduciamo la parte relativa alla tokenizzazione del file
@@ -59,7 +60,7 @@ int main(int argc, char* argv[])
         inputTokens = std::move(tokenize(inputFile));
         inputFile.close();
     } catch (LexicalError& le) {
-        std::cerr << "Errore in fase di analisi lessicale" << std::endl;
+        std::cerr << "Error in Tokenizer: ";
         std::cerr << le.what() << std::endl;
         return EXIT_FAILURE;
     } catch (std::exception& exc) {
@@ -68,42 +69,45 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    for (Token t : inputTokens) {
-        std::cout << t << std::endl;
-    }
+    //for (Token t : inputTokens) {
+    //    std::cout << t << std::endl;
+    //}
 
-
-    /*
     // Fase di Parsing
 
     // Creo il manager per i nodi
-    ExpressionManager manager;
+    NodeManager manager;
 
     // Creo il function object per il parsing
-    ParseExpression parse{ manager };
+    ParseProgram parse{ manager };
 
     try {
-        Expression* expr = parse(inputTokens);
-        PrintVisitor* p = new PrintVisitor();
-        std::cout << "L'espressione letta è ";
-        expr->accept(p);
-        std::cout << std::endl;
-        EvaluationVisitor* v = new EvaluationVisitor();
-        expr->accept(v);
-        std::cout << "Il valore dell'espressione è " << v->getValue() << std::endl;
+        Program* progr = parse(inputTokens);
+        // Print dell'albero sintattico
+        //parse.printSyntaxTree(progr, 0);
+        
+        std::unique_ptr<EvaluationVisitor> evalVisitor = std::make_unique<EvaluationVisitor>();
+        progr->accept(evalVisitor.get());
+
     } catch (ParseError& pe) {
-        std::cerr << "Errore in parsing" << std::endl;
+        std::cerr << "Error in Parser: ";
         std::cerr << pe.what() << std::endl;
+        manager.clearMemory();
+        return EXIT_FAILURE;
+    }  catch (EvalError& ee) {
+        std::cerr << "Error in evaluator: ";
+        std::cerr << ee.what() << std::endl;
+        manager.clearMemory();
         return EXIT_FAILURE;
     } catch (std::exception& exc) {
         // Catturo qualsiasi altra eccezione si verifichi
-        std::cerr << "Errore generico " << std::endl;
+        std::cerr << "Errore generico: ";
         std::cerr << exc.what() << std::endl;
+        manager.clearMemory();
         return EXIT_FAILURE;
     }
  
     return EXIT_SUCCESS;
-    */
     
 }
 

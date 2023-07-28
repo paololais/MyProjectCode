@@ -42,13 +42,14 @@ struct Token {
 	//	numero e variabile
 	static constexpr int NUM = 19;
 	static constexpr int VAR = 20;
-	
+	// block
+	static constexpr int BLOCK = 21;
 
 	static constexpr const char* id2word[]{
 		"SET", "PRINT", "INPUT", "IF", "WHILE", 
 		"ADD", "SUB", "MUL", "DIV", "GT", "LT", "EQ", 
 		"AND", "OR", "NOT", "TRUE", "FALSE", 
-		"(", ")", "NUM", "VAR"
+		"(", ")", "NUM", "VAR", "BLOCK"
 	};
 
 	Token(int t, const char* w) : tag{ t }, word{ w } { }

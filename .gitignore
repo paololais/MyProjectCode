@@ -5,3 +5,4 @@ espressione.txt
 *.gch
 LispInterpreter_TestFiles
 LispInterpreter_TestScripts
+/.metadata/
