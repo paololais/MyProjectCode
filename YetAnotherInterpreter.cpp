@@ -10,8 +10,6 @@
 #include "NodeManager.h"
 #include "Parser.h"
 #include "Visitor.h"
-#include "EvaluationVisitor.h"
-#include "PrintVisitor.h"
 
 // Facciamo in modo che l'espressione sia letta da file
 // Introduciamo la parte relativa alla tokenizzazione del file
@@ -86,8 +84,8 @@ int main(int argc, char* argv[])
         // Print dell'albero sintattico
         //parse.printSyntaxTree(progr, 0);
         
-        std::unique_ptr<EvaluationVisitor> evalVisitor = std::make_unique<EvaluationVisitor>();
-        progr->accept(evalVisitor.get());
+        std::unique_ptr<Visitor> visitor = std::make_unique<Visitor>();
+        progr->accept(visitor.get());
 
     } catch (ParseError& pe) {
         std::cerr << "Error in Parser: ";

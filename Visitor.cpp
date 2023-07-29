@@ -1,12 +1,12 @@
-#include "EvaluationVisitor.h"
+#include "Visitor.h"
 #include <algorithm>
 
-void EvaluationVisitor::visitProgram(Program* progrNode){
+void Visitor::visitProgram(Program* progrNode){
     StmtBlock* stmtBlock = progrNode->getStmtBlock();
     stmtBlock->accept(this);
 }
 
-void EvaluationVisitor::visitStmtBlock(StmtBlock* stmtblockNode) {
+void Visitor::visitStmtBlock(StmtBlock* stmtblockNode) {
      // Controlla se StmtBlock contiene un oggetto Statement
     if (stmtblockNode->getStatement() != nullptr) {
         Statement* stmt = stmtblockNode->getStatement();
@@ -19,18 +19,18 @@ void EvaluationVisitor::visitStmtBlock(StmtBlock* stmtblockNode) {
     }
 }
 
-void EvaluationVisitor::visitBlock(Block* blockNode) {
+void Visitor::visitBlock(Block* blockNode) {
     for (Statement* stmt : blockNode->getStatements()) {
         stmt->accept(this);
     }
 }
 
-void EvaluationVisitor::visitNumber(Number* numNode){
+void Visitor::visitNumber(Number* numNode){
     // Il metodo push_back inserisce il valore come ultimo elemento del vector
     // (equivale ad una PUSH in uno stack)
     intAccumulator.push_back(numNode->get_Value());
 }
-void EvaluationVisitor::visitOperator(Operator* opNode) {
+void Visitor::visitOperator(Operator* opNode) {
     // Valuta il valore dell'operando sinistro e destro
     opNode->getLeft()->accept(this);
     int leftValue = getBackIntAccumulator(); intAccumulator.pop_back();
@@ -62,10 +62,7 @@ void EvaluationVisitor::visitOperator(Operator* opNode) {
     }
 }
 
-void EvaluationVisitor::visitVariable(Variable* varNode){
-    if (!varNode) {
-        throw EvalError("Null pointer encountered in variable");
-    }
+void Visitor::visitVariable(Variable* varNode){
     // Get the variable_id from the Variable node
     std::string variable_id = varNode->get_variable_id();
 
@@ -87,36 +84,45 @@ void EvaluationVisitor::visitVariable(Variable* varNode){
     }
 }
 
-void EvaluationVisitor::visitBoolOp(BoolOp* boolNode) {
-    if (!boolNode) {
-        throw EvalError("Null pointer encountered in boolOp");
-    }
+void Visitor::visitBoolOp(BoolOp* boolNode) {
     boolNode->getBoolExpr1()->accept(this);
     bool lval = getBackBoolAccumulator(); boolAccumulator.pop_back();
     
-    BoolExpr* right = boolNode->getBoolExpr2();
-    if (right != nullptr) {
-        right->accept(this);
-        bool rval = getBackBoolAccumulator(); boolAccumulator.pop_back();
-        BoolOp::OpCode op = boolNode->getOpCode();
-        switch (op) {
-            case BoolOp::AND: boolAccumulator.push_back(lval && rval); break;;
-            case BoolOp::OR: boolAccumulator.push_back(lval || rval); break;
-            default: throw EvalError("Invalid BoolOp."); break;
-        }
-    } else{
-        //caso NOT
-        if(boolNode->getOpCode()==BoolOp::NOT){
-            boolAccumulator.push_back(!lval); 
-        } else {
-            throw EvalError("Invalid BoolOp.");
-        }
+    BoolExpr* right;
+
+    BoolOp::OpCode op = boolNode->getOpCode();
+    switch (op) {
+        case BoolOp::NOT:
+            boolAccumulator.push_back(!lval); break;
+        case BoolOp::AND:
+            //cortocircuitazione di AND e OR
+            if (!lval)
+            {
+                //AND a b -> se a è falso allora non valuto b
+                boolAccumulator.push_back(lval); break;
+            } else {
+                right = boolNode->getBoolExpr2();
+                right->accept(this);
+                bool rval = getBackBoolAccumulator(); boolAccumulator.pop_back();
+                boolAccumulator.push_back(lval && rval); break;
+            }
+             
+        case BoolOp::OR: 
+            //cortocircuitazione di AND e OR
+            if (lval)
+            {
+                //OR a b -> se a è vero allora non valuto b
+                boolAccumulator.push_back(lval); break;
+            } else {
+                right = boolNode->getBoolExpr2();
+                right->accept(this);
+                bool rval = getBackBoolAccumulator(); boolAccumulator.pop_back();
+                boolAccumulator.push_back(lval || rval); break;
+            }
+        default: throw EvalError("Invalid BoolOp."); break;
     }
 }
-void EvaluationVisitor::visitRelOp(RelOp* relNode){
-    if (!relNode) {
-        throw EvalError("Null pointer encountered in relOp");
-    }
+void Visitor::visitRelOp(RelOp* relNode){
     // Prelevo i puntatori agli operandi e gli faccio accettare 
     // questo oggetto come visitatore (propago la visita)
     relNode->getLeft()->accept(this);
@@ -129,25 +135,25 @@ void EvaluationVisitor::visitRelOp(RelOp* relNode){
     RelOp::OpCode op = relNode->getOp();
     switch (op) {
         case RelOp::LT:
-            intAccumulator.push_back(lval < rval); break;;
+           boolAccumulator.push_back(lval < rval); break;;
         case RelOp::GT:
-            intAccumulator.push_back(lval > rval); break;
+            boolAccumulator.push_back(lval > rval); break;
         case RelOp::EQ:
-            intAccumulator.push_back(lval == rval); break;;
+            boolAccumulator.push_back(lval == rval); break;;
         default:
            break;
     }
 }
-void EvaluationVisitor::visitBoolConst(BoolConst* boolconst){
+void Visitor::visitBoolConst(BoolConst* boolconst){
     boolAccumulator.push_back(boolconst->getBoolConst());
 }
 // Statement
-void EvaluationVisitor::visitPrintStmt(PrintStmt* statement) {
+void Visitor::visitPrintStmt(PrintStmt* statement) {
     statement->getNumExpr()->accept(this);
     std::cout << getBackIntAccumulator() << std::endl;
     intAccumulator.pop_back();
 }
-void EvaluationVisitor::visitSetStmt(SetStmt *statement){
+void Visitor::visitSetStmt(SetStmt *statement){
     isInSetContext = true;
     statement->getNumExpr()->accept(this);
     int value = getBackIntAccumulator();
@@ -157,8 +163,7 @@ void EvaluationVisitor::visitSetStmt(SetStmt *statement){
     symbolTable[variable_id] = value;
     isInSetContext = false;
 }
-void EvaluationVisitor::visitInputStmt(InputStmt *statement)
-{
+void Visitor::visitInputStmt(InputStmt *statement) {
     int value;
     std::cout << "Enter an integer value: ";
     std::cin >> value;
@@ -171,7 +176,7 @@ void EvaluationVisitor::visitInputStmt(InputStmt *statement)
         throw EvalError("Invalid input! Please enter an integer.");
     }
 }
-void EvaluationVisitor::visitWhileStmt(WhileStmt* statement) {
+void Visitor::visitWhileStmt(WhileStmt* statement) {
     while (true) {
         // Valuta la condizione del while
         statement->getBoolExpr()->accept(this);
@@ -183,7 +188,7 @@ void EvaluationVisitor::visitWhileStmt(WhileStmt* statement) {
     }
 }
 
-void EvaluationVisitor::visitIfStmt(IfStmt* statement) {
+void Visitor::visitIfStmt(IfStmt* statement) {
     // Valuta la condizione dell'if
     statement->getBoolExpr()->accept(this);
     bool condValue = getBackBoolAccumulator();

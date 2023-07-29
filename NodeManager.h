@@ -140,50 +140,6 @@ public:
         }
         allocated.resize(0);
     }
-/* 
-      // Metodo per impostare il valore di una variabile corrispondente nel vector allocated
-    void setVariable(Variable* var, int value) {
-        // Cerca la variabile nel vector allocated e imposta il suo valore
-        for (Node* node : allocated) {
-            // Utilizziamo dynamic_cast per verificare se l'elemento è effettivamente di tipo Variable
-            // Se lo è, impostiamo il valore
-            if (Variable* variableNode = dynamic_cast<Variable*>(node)) {
-                if (variableNode == var) {
-                    // Abbiamo trovato la variabile corrispondente, impostiamo il valore
-                    variableNode->set_value(value);
-                    break; // Esce dal ciclo dopo aver trovato la variabile
-                }
-            }
-        }
-    }
-
-    bool checkIfVariableExists(std::string s){
-        // Utilizzando il ciclo for con indice
-        bool found = false;
-        for (Node* node : allocated) {
-            // Effettua il dynamic_cast a Variable*
-            Variable* varNode = dynamic_cast<Variable*>(node);
-            // se node non fosse una variable allora varNode è nullptr
-            if (varNode != nullptr && varNode->get_variable_id() == s) {
-                found = true;
-                break;
-            }
-        }
-
-        return found;
-    }
-
-    Variable* getVariable(std::string s){
-        for (Node* node : allocated) {
-            // Effettua il dynamic_cast a Variable*
-            Variable* varNode = dynamic_cast<Variable*>(node);
-            // se node non fosse una variable allora varNode è nullptr
-            if (varNode != nullptr && varNode->get_variable_id() == s) {
-                return varNode;
-            }
-        }
-        return nullptr;
-    } */
 
 private:
     std::vector<Node*> allocated;

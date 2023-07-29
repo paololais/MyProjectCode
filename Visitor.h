@@ -4,6 +4,7 @@
 #include <vector>
 #include <variant>
 #include <iostream>
+#include <unordered_map>
 
 #include "Program.h"
 #include "StmtBlock.h"
@@ -11,30 +12,66 @@
 #include "Block.h"
 #include "NumExpr.h"
 #include "BoolExpr.h"
+#include "Exceptions.h"
 
-// Visitor astratto per la visita degli oggetti del Program
-class Visitor {
+// Visitor concreto per la valutazione delle espressioni
+class Visitor{
 public:
-    virtual void visitProgram(Program* progrNode) = 0;
-    virtual void visitStmtBlock(StmtBlock* stmtblockNode) = 0;
-    virtual void visitBlock(Block* blockNode) = 0;
+    Visitor() : intAccumulator{}, boolAccumulator{}, symbolTable{}, isInSetContext(false) {}
+
+    // TODO: distruttore, costruttori di copia, ecc.
+    ~Visitor() = default;
+
+    void visitProgram(Program* progrNode);
+    void visitStmtBlock(StmtBlock* stmtblockNode);
+    void visitBlock(Block* blockNode);
     
     // Statement
-    virtual void visitPrintStmt(PrintStmt* statement) = 0;
-    virtual void visitSetStmt(SetStmt* statement) = 0;
-    virtual void visitInputStmt(InputStmt* statement) = 0;
-    virtual void visitWhileStmt(WhileStmt* statement) = 0;
-    virtual void visitIfStmt(IfStmt* statement) = 0;
+    void visitPrintStmt(PrintStmt* statement);
+    void visitSetStmt(SetStmt* statement);
+    void visitInputStmt(InputStmt* statement);
+    void visitWhileStmt(WhileStmt* statement);
+    void visitIfStmt(IfStmt* statement);
 
     // NumExpr
-    virtual void visitOperator(Operator* opNode) = 0;
-    virtual void visitNumber(Number* numNode) = 0;
-    virtual void visitVariable(Variable* varNode) = 0;
-
+    void visitOperator(Operator* opNode);
+    void visitNumber(Number* numNode);
+    void visitVariable(Variable* varNode);
+    
     // BoolExpr
-    virtual void visitBoolOp(BoolOp* boolNode) = 0;
-    virtual void visitRelOp(RelOp* relNode) = 0;
-    virtual void visitBoolConst(BoolConst* boolconst) = 0;
+    void visitBoolOp(BoolOp* boolNode);
+    void visitRelOp(RelOp* relNode);
+    void visitBoolConst(BoolConst* boolconst);
+
+    //metodi per safe access ai vector, nel caso fossero vuoti -> errore
+    int getBackIntAccumulator(){
+        if (!intAccumulator.empty())
+        {
+            return intAccumulator.back();
+        } else {
+            throw EvalError("Trying to access empty intAccumulator vector");
+        }
+    }
+    int getBackBoolAccumulator(){
+        if (!boolAccumulator.empty())
+        {
+            return boolAccumulator.back();
+        } else {
+            throw EvalError("Trying to access empty boolAccumulator vector");
+        }
+    }
+
+private:
+    // Tabella dei simboli per memorizzare i valori delle variabili
+    std::unordered_map<std::string, int> symbolTable;
+
+    //accumulatori per la valutazione delle espressioni nel programma
+    std::vector<int> intAccumulator;
+    std::vector<bool> boolAccumulator;
+
+    //variabile booleana per tenere traccia se siamo nel contesto di una SET
+    //utilizzo per generare errore o meno se stiamo utilizzando una variabile non definita
+    bool isInSetContext;
 };
 
 #endif

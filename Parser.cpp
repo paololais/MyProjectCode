@@ -17,13 +17,12 @@
 Program* ParseProgram::operator()(const std::vector<Token>& tokenStream) {
     auto tokenItr = tokenStream.begin();
     streamEnd = tokenStream.end();
-    Program* expr = parseProgram(tokenItr);
+    Program* progr = parseProgram(tokenItr);
     if (tokenItr != streamEnd) {
         throw ParseError("Unexpected tokens after parsing");
         return nullptr;
     }
-    std::cout << "Parsing corretto" << std::endl;
-    return expr;
+    return progr;
 }
 
 void ParseProgram::safe_next(std::vector<Token>::const_iterator& itr) {
